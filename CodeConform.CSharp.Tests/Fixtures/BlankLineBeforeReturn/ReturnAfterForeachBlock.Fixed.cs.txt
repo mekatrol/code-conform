@@ -6,6 +6,7 @@ internal static class TestClass
         {
             DoSomething(value);
         }
+
         return 42;
     }
 
@@ -20,6 +21,7 @@ internal static class TestClass
         {
             count += value;
         }
+
         return count;
     }
 }

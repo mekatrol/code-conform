@@ -3,8 +3,8 @@ internal static class TestClass
     public static int GetValue()
     {
         DoSomething();
-        // The calculation is complete.
-        // Return the calculated value.
+        // The value has already been calculated.
+        // Return it without further processing.
         return 42;
     }
 

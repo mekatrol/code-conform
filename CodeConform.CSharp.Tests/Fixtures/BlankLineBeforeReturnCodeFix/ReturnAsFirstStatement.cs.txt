@@ -1,7 +1,0 @@
-internal static class TestClass
-{
-    public static int GetValue()
-    {
-        return 42;
-    }
-}

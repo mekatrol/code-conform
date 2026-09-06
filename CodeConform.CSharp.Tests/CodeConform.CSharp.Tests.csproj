@@ -24,15 +24,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Fixtures\BlankLineBeforeReturn\" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<None Update="Fixtures\**\*.cs.txt" CopyToOutputDirectory="PreserveNewest" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Analyzer Include="..\CodeConform.CSharp.Analyzers\bin\$(Configuration)\netstandard2.0\CodeConform.CSharp.Analyzers.dll" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Fixtures\BlankLineBeforeReturnCodeFix\" />
 	</ItemGroup>
 
 </Project>

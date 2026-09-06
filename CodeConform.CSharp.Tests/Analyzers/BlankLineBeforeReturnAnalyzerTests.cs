@@ -120,19 +120,41 @@ public sealed class BlankLineBeforeReturnAnalyzerTests
     }
 
     /// <summary>
-    /// Verifies that a return statement immediately following a foreach block
-    /// violates the blank-line requirement.
-    /// Expected result: CC0001 is produced for the return statement.
+    /// Verifies that return statements immediately following foreach blocks
+    /// violate the blank-line requirement.
+    /// Expected result: two CC0001 diagnostics are produced, one for each
+    /// return statement that immediately follows a foreach block.
     /// </summary>
     [TestMethod]
-    public async Task ReturnAfterForeachBlockReportsDiagnostic()
+    public async Task ReturnAfterForeachBlockReportsDiagnostics()
     {
-        await VerifyDiagnosticAsync(
-            "ReturnAfterForeachBlock.cs.txt",
-            9,
-            9,
-            9,
-            19);
+        var source = FixtureLoader.Load(
+            "BlankLineBeforeReturn",
+            "ReturnAfterForeachBlock.cs.txt");
+
+        var test = CreateTest(source);
+
+        test.ExpectedDiagnostics.Add(
+            new DiagnosticResult(
+                "CC0001",
+                DiagnosticSeverity.Warning)
+                .WithSpan(
+                    9,
+                    9,
+                    9,
+                    19));
+
+        test.ExpectedDiagnostics.Add(
+            new DiagnosticResult(
+                "CC0001",
+                DiagnosticSeverity.Warning)
+                .WithSpan(
+                    23,
+                    9,
+                    23,
+                    22));
+
+        await test.RunAsync();
     }
 
     /// <summary>

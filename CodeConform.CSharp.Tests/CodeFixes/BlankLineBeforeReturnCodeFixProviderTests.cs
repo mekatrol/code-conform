@@ -27,11 +27,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterInvocationInsertsBlankLine()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterInvocation.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterInvocation.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -58,11 +58,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterAssignmentInsertsBlankLine()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterAssignment.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterAssignment.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -90,11 +90,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterLocalDeclarationInsertsBlankLine()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterLocalDeclaration.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterLocalDeclaration.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -122,11 +122,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task VoidReturnAfterStatementInsertsBlankLine()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "VoidReturnAfterStatement.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "VoidReturnAfterStatement.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -154,11 +154,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterIfBlockInsertsBlankLine()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterIfBlock.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterIfBlock.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -177,20 +177,20 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     }
 
     /// <summary>
-    /// Verifies that a return following a foreach block is corrected without
-    /// modifying the loop body.
-    /// Expected result: CC0001 is produced and a blank line is inserted after
-    /// the foreach block.
+    /// Verifies that return statements following foreach blocks are corrected
+    /// without modifying either loop body.
+    /// Expected result: two CC0001 diagnostics are produced and a blank line is
+    /// inserted after each foreach block before the corresponding return.
     /// </summary>
     [TestMethod]
     public async Task ReturnAfterForeachBlockInsertsBlankLine()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterForeachBlock.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterForeachBlock.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -200,9 +200,19 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
                 "CC0001",
                 DiagnosticSeverity.Warning)
                 .WithSpan(
-                    10,
                     9,
-                    10,
+                    9,
+                    9,
+                    19));
+
+        test.ExpectedDiagnostics.Add(
+            new DiagnosticResult(
+                "CC0001",
+                DiagnosticSeverity.Warning)
+                .WithSpan(
+                    23,
+                    9,
+                    23,
                     22));
 
         await test.RunAsync();
@@ -218,11 +228,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterTryCatchInsertsBlankLine()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterTryCatch.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterTryCatch.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -250,11 +260,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task MultilineReturnAfterStatementInsertsBlankLine()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "MultilineReturnAfterStatement.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "MultilineReturnAfterStatement.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -282,11 +292,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterSingleCommentMovesSeparatorBeforeComment()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterCommentWithoutBlankLine.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterCommentWithoutBlankLine.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -314,11 +324,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterMultipleCommentsMovesSeparatorBeforeCommentBlock()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterMultipleCommentsWithoutBlankLine.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterMultipleCommentsWithoutBlankLine.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -346,11 +356,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterMultilineCommentMovesSeparatorBeforeCommentBlock()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterMultilineCommentWithoutBlankLine.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterMultilineCommentWithoutBlankLine.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
@@ -378,7 +388,7 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAfterExistingBlankLineDoesNotOfferFix()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAfterBlankLine.cs.txt");
 
         var test = CreateTest(source);
@@ -395,7 +405,7 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAsFirstStatementDoesNotOfferFix()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAsFirstStatement.cs.txt");
 
         var test = CreateTest(source);
@@ -413,7 +423,7 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task ReturnAsFirstStatementAfterCommentDoesNotOfferFix()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "ReturnAsFirstStatementAfterComment.cs.txt");
 
         var test = CreateTest(source);
@@ -431,11 +441,11 @@ public sealed class BlankLineBeforeReturnCodeFixProviderTests
     public async Task MultipleInvalidReturnsAreAllFixed()
     {
         var source = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "MultipleInvalidReturns.cs.txt");
 
         var fixedSource = FixtureLoader.Load(
-            "BlankLineBeforeReturnCodeFix",
+            "BlankLineBeforeReturn",
             "MultipleInvalidReturns.Fixed.cs.txt");
 
         var test = CreateTest(source, fixedSource);
