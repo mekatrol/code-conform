@@ -4,17 +4,38 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
-		
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+
+		<!-- NuGet package configuration -->
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+		<DevelopmentDependency>true</DevelopmentDependency>
+
+		<!-- NuGet package metadata -->
+		<PackageId>CodeConform.CSharp</PackageId>
+		<Version>0.1.0</Version>
+		<Authors>Mekatrol</Authors>
+		<Description>Custom C# code quality and formatting rules.</Description>
+		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp"
+						  PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<!-- Provide analyzer release tracking files required by Roslyn analyzer validation rules. -->
 		<AdditionalFiles Include="AnalyzerReleases.Shipped.md" />
 		<AdditionalFiles Include="AnalyzerReleases.Unshipped.md" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<!-- A Roslyn analyzer DLL must be under the analyzer-specific path in the NuGet package. -->
+		<None Include="$(OutputPath)$(AssemblyName).dll"
+			  Pack="true"
+			  PackagePath="analyzers/dotnet/cs"
+			  Visible="false" />
 	</ItemGroup>
 
 </Project>

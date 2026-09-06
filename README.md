@@ -15,11 +15,7 @@ The project is intended to enforce coding standards that are not currently suppo
 * Be suitable for local development and CI environments.
 * Operate entirely offline once dependencies have been restored.
 
-## Current Scope
-
-The initial implementation supports **C# only** and is built using the .NET Compiler Platform (Roslyn).
-
-The first set of rules focuses on whitespace and blank-line conventions that are not provided by `dotnet format`.
+## Formatting Rules
 
 ### Blank-Line Rules
 
@@ -82,17 +78,14 @@ the existing mechanism should be preferred.
 
 ## Architecture
 
-The initial repository is intentionally small:
+The repository is intentionally small and uses a shallow project structure:
 
 ```text
 code-conform/
-├── src/
-│   ├── CodeConform.CSharp/
-│   └── CodeConform.Tool/
-│
-├── tests/
-│   └── CodeConform.CSharp.Tests/
-│
+├── CodeConform.CSharp/
+├── CodeConform.CSharp.Tests/
+├── .editorconfig
+├── .gitignore
 ├── CodeConform.slnx
 ├── Directory.Build.props
 ├── Directory.Packages.props
@@ -108,8 +101,11 @@ Contains the Roslyn-based implementation:
 * code fix providers
 * formatting rules
 * syntax and trivia helpers
+* analyzer release tracking
 
 The same rule implementation should be used by IDE analysis and command-line tooling to ensure consistent behaviour.
+
+The project targets `netstandard2.0` to provide broad compatibility with Roslyn analyzer hosts.
 
 ### CodeConform.CSharp.Tests
 
@@ -117,11 +113,13 @@ Contains analyzer and code-fix tests.
 
 Formatting behaviour should be thoroughly tested against normal and unusual C# syntax before rules are considered stable.
 
+Tests use source fixtures so that valid and intentionally invalid formatting can be represented independently of the formatting rules applied to the test project itself.
+
 ### CodeConform.Tool
 
-Command-line integration for repository-wide checking and fixing.
+A command-line tool may be added in the future for repository-wide checking and fixing.
 
-The intended command is:
+The intended command would be:
 
 ```console
 dotnet conform
@@ -134,13 +132,13 @@ dotnet conform check
 dotnet conform fix
 ```
 
-The command-line tool is secondary to the Roslyn analyzer implementation and may not be required during the initial development phase.
+The command-line tool is secondary to the Roslyn analyzer implementation and is not currently required during the initial development phase.
 
 ## Visual Studio Integration
 
 `CodeConform.CSharp` is intended to be distributed as a NuGet analyzer package.
 
-Projects can reference the analyzer package and receive diagnostics directly while editing C# code in Visual Studio.
+Projects referencing the analyzer package receive diagnostics directly while editing and building C# code.
 
 For example:
 
@@ -149,13 +147,13 @@ DoSomething();
 return result;
 ```
 
-may produce a diagnostic such as:
+produces:
 
 ```text
 CC0001: A blank line is required before this return statement.
 ```
 
-with an associated code fix producing:
+The correctly formatted code is:
 
 ```csharp
 DoSomething();
@@ -163,26 +161,45 @@ DoSomething();
 return result;
 ```
 
+Where practical, diagnostics will also provide automatic code fixes.
+
 ## Configuration
 
-Rule severity should use the standard Roslyn `.editorconfig` mechanism where possible.
+Rule severity uses the standard Roslyn `.editorconfig` mechanism.
 
 For example:
 
 ```ini
 [*.cs]
 
-dotnet_diagnostic.CC0001.severity = warning
-dotnet_diagnostic.CC0002.severity = warning
+dotnet_diagnostic.CC0001.severity = error
 ```
 
-This allows repositories to enable, disable, or change the severity of individual rules without introducing a separate configuration system.
+Supported severity values include:
+
+```text
+none
+silent
+suggestion
+warning
+error
+```
+
+Using the standard Roslyn configuration mechanism allows repositories to enable, disable, or change the severity of individual CodeConform rules without introducing a separate configuration system.
+
+For example, configuring:
+
+```ini
+dotnet_diagnostic.CC0001.severity = error
+```
+
+causes a `CC0001` violation to fail `dotnet build`.
 
 ## `dotnet format`
 
 `code-conform` is intended to work alongside `dotnet format`, not replace it.
 
-A typical repository formatting workflow may eventually be:
+A repository formatting workflow may eventually be:
 
 ```console
 dotnet format
@@ -195,14 +212,13 @@ Where possible, CodeConform analyzers and code fixes may also be executable thro
 
 CodeConform diagnostics use the `CC` prefix.
 
-For example:
+Currently implemented rules are:
 
-| Rule     | Description                                       |
-| -------- | ------------------------------------------------- |
-| `CC0001` | Blank line required before control-flow statement |
-| `CC0002` | Blank line required before `return` statement     |
-| `CC0003` | Blank line required after closing brace           |
-| `CC0004` | Blank line required before comment block          |
+| Rule     | Description                                   |
+| -------- | --------------------------------------------- |
+| `CC0001` | Blank line required before `return` statement |
+
+Additional rule IDs will be assigned as rules are implemented.
 
 Rule IDs and definitions may change while the project is under initial development.
 
@@ -218,7 +234,7 @@ Conform(Conform(source)) == Conform(source)
 
 ### Syntax-aware
 
-C# source is analysed using Roslyn syntax trees rather than regular expressions or line-oriented source manipulation.
+C# source is analysed using Roslyn syntax trees and trivia rather than regular expressions or simple line-oriented source manipulation.
 
 ### Semantics preserving
 
@@ -246,23 +262,333 @@ Every formatting rule should include tests covering:
 
 ## Building
 
-Restore and build the solution using the .NET SDK:
+### Restore Dependencies
+
+Restore NuGet dependencies for the solution:
 
 ```console
-dotnet restore
+dotnet restore CodeConform.slnx
+```
+
+This downloads any required NuGet packages that are not already available in the local NuGet cache.
+
+Once the required dependencies have been restored, normal builds can operate without repeatedly downloading them.
+
+### Build the Solution
+
+Build the solution using the default Debug configuration:
+
+```console
+dotnet build CodeConform.slnx
+```
+
+This builds both the analyzer and its tests.
+
+Because the test project uses the CodeConform analyzer during compilation, CodeConform diagnostics can also be reported while building the repository itself.
+
+For example:
+
+```text
+CodeConform.CSharp.Tests\Analyzers\BlankLineBeforeReturnAnalyzerTests.cs(435,9):
+error CC0001: A blank line is required before this return statement
+```
+
+### Run the Tests
+
+Run all tests in the solution with:
+
+```console
+dotnet test CodeConform.slnx
+```
+
+The analyzer test suite verifies both correctly formatted source and source that is expected to produce CodeConform diagnostics.
+
+## Building the NuGet Package
+
+`CodeConform.CSharp` is distributed as a Roslyn analyzer NuGet package.
+
+Creating a new package consists of:
+
+1. updating the package version
+2. cleaning previous Release build output
+3. creating a new Release package
+4. locating and optionally copying the generated package to a local NuGet source
+
+### 1. Update the Package Version
+
+Before creating a new package, update the package version in:
+
+```text
+CodeConform.CSharp/CodeConform.CSharp.csproj
+```
+
+For example:
+
+```xml
+<Version>0.1.1</Version>
+```
+
+The package version becomes part of the generated NuGet package filename.
+
+For example, version:
+
+```xml
+<Version>0.1.1</Version>
+```
+
+produces:
+
+```text
+CodeConform.CSharp.0.1.1.nupkg
+```
+
+The version should be changed whenever a new package needs to be distinguishable from a previously built or installed package.
+
+This is particularly important when testing packages locally because NuGet caches packages by package ID and version. Rebuilding a package using an unchanged version can therefore result in an older cached package being used instead of the newly built package.
+
+### 2. Clean the Previous Release Build
+
+Before creating the package, clean the Release configuration:
+
+```console
+dotnet clean .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
+```
+
+This removes output from previous Release builds, including files under the project's Release `bin` and `obj` directories.
+
+Cleaning before packaging helps ensure that the new package is created from the current source rather than accidentally relying on stale build output.
+
+The command specifically cleans:
+
+```text
+CodeConform.CSharp/CodeConform.CSharp.csproj
+```
+
+using:
+
+```text
+-c Release
+```
+
+which is shorthand for:
+
+```text
+--configuration Release
+```
+
+This is separate from the normal Debug build used during development.
+
+### 3. Create a New Release Package
+
+Create the NuGet package with:
+
+```console
+dotnet pack .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
+```
+
+`dotnet pack` performs the Release build required for packaging and then creates the `.nupkg` file.
+
+The command packages:
+
+```text
+CodeConform.CSharp/CodeConform.CSharp.csproj
+```
+
+using the Release configuration.
+
+A successful command will build:
+
+```text
+CodeConform.CSharp/bin/Release/netstandard2.0/CodeConform.CSharp.dll
+```
+
+and create the NuGet package.
+
+The generated package is written to:
+
+```text
+CodeConform.CSharp/bin/Release/
+```
+
+For example:
+
+```text
+CodeConform.CSharp/bin/Release/CodeConform.CSharp.0.1.1.nupkg
+```
+
+The exact filename depends on the value of:
+
+```xml
+<Version>...</Version>
+```
+
+in `CodeConform.CSharp.csproj`.
+
+### Analyzer Package Structure
+
+`CodeConform.CSharp` is an analyzer package rather than a normal runtime library.
+
+The project therefore configures the analyzer DLL to be stored inside the NuGet package under:
+
+```text
+analyzers/dotnet/cs/
+```
+
+The resulting package contains:
+
+```text
+analyzers/
+└── dotnet/
+    └── cs/
+        └── CodeConform.CSharp.dll
+```
+
+This location tells NuGet and Roslyn that the assembly should be loaded as a C# analyzer.
+
+It is intentionally not packaged as:
+
+```text
+lib/netstandard2.0/CodeConform.CSharp.dll
+```
+
+because consuming applications do not need `CodeConform.CSharp.dll` as a runtime dependency.
+
+## Using the NuGet Package Locally
+
+A local NuGet source can be used to test CodeConform without publishing the package to a remote NuGet repository.
+
+### Create a Local NuGet Source
+
+For example, create:
+
+```powershell
+New-Item -ItemType Directory -Path D:\NuGetLocal
+```
+
+Register the directory as a NuGet package source:
+
+```powershell
+dotnet nuget add source D:\NuGetLocal --name Local
+```
+
+The configured NuGet sources can be checked with:
+
+```powershell
+dotnet nuget list source
+```
+
+### Copy the Package to the Local Source
+
+After building the package, copy it into the local NuGet source:
+
+```powershell
+Copy-Item `
+    .\CodeConform.CSharp\bin\Release\CodeConform.CSharp.0.1.1.nupkg `
+    D:\NuGetLocal\
+```
+
+Change the filename to match the version that was just built.
+
+The local source will then contain, for example:
+
+```text
+D:\NuGetLocal\
+└── CodeConform.CSharp.0.1.1.nupkg
+```
+
+### Install the Local Package
+
+From another C# project, install the package using the local source:
+
+```powershell
+dotnet add package CodeConform.CSharp `
+    --version 0.1.1 `
+    --source D:\NuGetLocal
+```
+
+The package can also be referenced directly in the consuming project's `.csproj`:
+
+```xml
+<ItemGroup>
+    <PackageReference Include="CodeConform.CSharp"
+                      Version="0.1.1"
+                      PrivateAssets="all" />
+</ItemGroup>
+```
+
+`PrivateAssets="all"` prevents the analyzer package from becoming a transitive dependency of projects that consume the resulting application or library package.
+
+### Verify the Analyzer
+
+Add deliberately non-conforming code to the consuming project:
+
+```csharp
+var result = GetResult();
+return result;
+```
+
+Then build:
+
+```console
 dotnet build
 ```
 
-Run the tests with:
+CodeConform should report:
 
-```console
-dotnet test
+```text
+CC0001: A blank line is required before this return statement
 ```
 
-Create NuGet packages with:
+The severity is controlled by the consuming project's `.editorconfig`.
 
-```console
-dotnet pack
+For example:
+
+```ini
+[*.cs]
+
+dotnet_diagnostic.CC0001.severity = error
+```
+
+will cause the violation to be reported as an error and fail the build.
+
+The correctly formatted source is:
+
+```csharp
+var result = GetResult();
+
+return result;
+```
+
+## Package Development Workflow
+
+A typical local package development cycle is therefore:
+
+1. Make and test the CodeConform changes.
+2. Update `<Version>` in `CodeConform.CSharp.csproj`.
+3. Clean the previous Release build.
+4. Build the new NuGet package.
+5. Copy the package into the local NuGet source.
+6. Update the consuming test project to the new package version.
+7. Restore and build the consuming project.
+
+The core package commands are:
+
+```powershell
+dotnet clean .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
+
+dotnet pack .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
+```
+
+After a successful package operation, the new package can be found under:
+
+```text
+CodeConform.CSharp/bin/Release/
+```
+
+For example:
+
+```text
+CodeConform.CSharp/bin/Release/CodeConform.CSharp.0.1.1.nupkg
 ```
 
 ## Status
