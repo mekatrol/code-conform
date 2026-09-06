@@ -1,0 +1,11 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void First()
+    {
+    }
+    public void Second()
+    {
+    }
+}

@@ -1,0 +1,71 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run(int[] values, object gate)
+    {
+        Work();
+
+        for (var index = 0; index < values.Length; index++)
+        {
+        }
+
+        Work();
+
+        foreach (var value in values)
+        {
+            Work(value);
+        }
+
+        Work();
+
+        while (values.Length > 0)
+        {
+            break;
+        }
+
+        Work();
+
+        do
+        {
+            Work();
+        }
+        while (false);
+
+        Work();
+
+        switch (values.Length)
+        {
+            default:
+                break;
+        }
+
+        Work();
+
+        try
+        {
+            Work();
+        }
+        catch (System.Exception)
+        {
+        }
+
+        Work();
+
+        using (var stream = new System.IO.MemoryStream())
+        {
+            Work();
+        }
+
+        Work();
+
+        lock (gate)
+        {
+            Work();
+        }
+    }
+
+    private void Work(int value = 0)
+    {
+    }
+}

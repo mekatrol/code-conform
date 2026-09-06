@@ -82,7 +82,8 @@ The repository is intentionally small and uses a shallow project structure:
 
 ```text
 code-conform/
-├── CodeConform.CSharp/
+├── CodeConform.CSharp.Analyzers/
+├── CodeConform.CSharp.CodeFixes/
 ├── CodeConform.CSharp.Tests/
 ├── .editorconfig
 ├── .gitignore
@@ -93,12 +94,11 @@ code-conform/
 └── README.md
 ```
 
-### CodeConform.CSharp
+### CodeConform.CSharp.Analyzers
 
-Contains the Roslyn-based implementation:
+Contains the compiler-safe Roslyn implementation:
 
 * diagnostic analyzers
-* code fix providers
 * formatting rules
 * syntax and trivia helpers
 * analyzer release tracking
@@ -106,6 +106,15 @@ Contains the Roslyn-based implementation:
 The same rule implementation should be used by IDE analysis and command-line tooling to ensure consistent behaviour.
 
 The project targets `netstandard2.0` to provide broad compatibility with Roslyn analyzer hosts.
+
+### CodeConform.CSharp.CodeFixes
+
+Contains the Roslyn Workspaces-based code-fix providers. Keeping code fixes in
+a separate assembly prevents the analyzer assembly from taking a Workspaces
+dependency and avoids Roslyn rule RS1038.
+
+Both assemblies are packaged under `analyzers/dotnet/cs` in the
+`CodeConform.CSharp` NuGet package.
 
 ### CodeConform.CSharp.Tests
 
@@ -136,7 +145,8 @@ The command-line tool is secondary to the Roslyn analyzer implementation and is 
 
 ## Visual Studio Integration
 
-`CodeConform.CSharp` is intended to be distributed as a NuGet analyzer package.
+`CodeConform.CSharp.Analyzers` and `CodeConform.CSharp.CodeFixes` are distributed
+together as the `CodeConform.CSharp` NuGet analyzer package.
 
 Projects referencing the analyzer package receive diagnostics directly while editing and building C# code.
 
@@ -214,11 +224,31 @@ CodeConform diagnostics use the `CC` prefix.
 
 Currently implemented rules are:
 
-| Rule     | Description                                   |
-| -------- | --------------------------------------------- |
-| `CC0001` | Blank line required before `return` statement |
+| Rule     | Description                                             |
+| -------- | ------------------------------------------------------- |
+| `CC0001` | Blank line required before a `return` statement          |
+| `CC0002` | Blank line required before a block-opening statement     |
+| `CC0003` | Blank line required after a semantic closing brace       |
+| `CC0004` | Blank line required before an ordinary comment block     |
 
-Additional rule IDs will be assigned as rules are implemented.
+CC0002 covers block-bodied `if`, `for`, `foreach`, `while`, `do`, `switch`,
+`try`, `using`, `lock`, and `fixed` statements. It does not apply to unbraced
+embedded statements, using declarations, or grammatical continuations such as
+`else if`.
+
+CC0003 recognizes syntax-tree brace ownership instead of processing every `}`
+character. It preserves `else`, `catch`, `finally`, the `while` clause of a
+do/while statement, required semicolons, and adjacent closing braces.
+
+CC0004 applies to ordinary `//` and `/* ... */` comment blocks. XML
+documentation, end-of-line comments, directives, and comments that are the
+first item after an opening brace are excluded.
+
+When comments immediately document a CC0001 return or CC0002 block-opening
+statement, that statement-specific diagnostic owns the boundary and its fix
+inserts the blank line before the first comment. When a comment follows a
+closing brace, CC0004 owns the boundary instead of CC0003. This ensures that
+only one diagnostic and one edit apply to any whitespace boundary.
 
 Rule IDs and definitions may change while the project is under initial development.
 
@@ -252,9 +282,9 @@ Every formatting rule should include tests covering:
 * invalid code
 * automatic fixes
 * nested blocks
-* comments
-* multiline comments
-* control-flow constructs
+* comments, including consecutive `//` blocks
+* multiline `/* ... */` comments
+* comment association across every supported control-flow construct
 * preprocessor directives
 * unusual whitespace
 * LF and CRLF line endings
@@ -282,7 +312,7 @@ Build the solution using the default Debug configuration:
 dotnet build CodeConform.slnx
 ```
 
-This builds both the analyzer and its tests.
+This builds the analyzer, code-fix, and test projects.
 
 Because the test project uses the CodeConform analyzer during compilation, CodeConform diagnostics can also be reported while building the repository itself.
 
@@ -319,7 +349,7 @@ Creating a new package consists of:
 Before creating a new package, update the package version in:
 
 ```text
-CodeConform.CSharp/CodeConform.CSharp.csproj
+CodeConform.CSharp.Analyzers/CodeConform.CSharp.Analyzers.csproj
 ```
 
 For example:
@@ -351,7 +381,7 @@ This is particularly important when testing packages locally because NuGet cache
 Before creating the package, clean the Release configuration:
 
 ```console
-dotnet clean .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
+dotnet clean .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj -c Release
 ```
 
 This removes output from previous Release builds, including files under the project's Release `bin` and `obj` directories.
@@ -361,7 +391,7 @@ Cleaning before packaging helps ensure that the new package is created from the 
 The command specifically cleans:
 
 ```text
-CodeConform.CSharp/CodeConform.CSharp.csproj
+CodeConform.CSharp.Analyzers/CodeConform.CSharp.Analyzers.csproj
 ```
 
 using:
@@ -383,7 +413,7 @@ This is separate from the normal Debug build used during development.
 Create the NuGet package with:
 
 ```console
-dotnet pack .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
+dotnet pack .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj -c Release
 ```
 
 `dotnet pack` performs the Release build required for packaging and then creates the `.nupkg` file.
@@ -391,7 +421,7 @@ dotnet pack .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
 The command packages:
 
 ```text
-CodeConform.CSharp/CodeConform.CSharp.csproj
+CodeConform.CSharp.Analyzers/CodeConform.CSharp.Analyzers.csproj
 ```
 
 using the Release configuration.
@@ -399,7 +429,7 @@ using the Release configuration.
 A successful command will build:
 
 ```text
-CodeConform.CSharp/bin/Release/netstandard2.0/CodeConform.CSharp.dll
+CodeConform.CSharp.Analyzers/bin/Release/netstandard2.0/CodeConform.CSharp.Analyzers.dll
 ```
 
 and create the NuGet package.
@@ -407,13 +437,13 @@ and create the NuGet package.
 The generated package is written to:
 
 ```text
-CodeConform.CSharp/bin/Release/
+CodeConform.CSharp.Analyzers/bin/Release/
 ```
 
 For example:
 
 ```text
-CodeConform.CSharp/bin/Release/CodeConform.CSharp.0.1.1.nupkg
+CodeConform.CSharp.Analyzers/bin/Release/CodeConform.CSharp.0.1.1.nupkg
 ```
 
 The exact filename depends on the value of:
@@ -440,7 +470,8 @@ The resulting package contains:
 analyzers/
 └── dotnet/
     └── cs/
-        └── CodeConform.CSharp.dll
+        ├── CodeConform.CSharp.Analyzers.dll
+        └── CodeConform.CSharp.CodeFixes.dll
 ```
 
 This location tells NuGet and Roslyn that the assembly should be loaded as a C# analyzer.
@@ -448,7 +479,7 @@ This location tells NuGet and Roslyn that the assembly should be loaded as a C# 
 It is intentionally not packaged as:
 
 ```text
-lib/netstandard2.0/CodeConform.CSharp.dll
+lib/netstandard2.0/CodeConform.CSharp.Analyzers.dll
 ```
 
 because consuming applications do not need `CodeConform.CSharp.dll` as a runtime dependency.
@@ -483,7 +514,7 @@ After building the package, copy it into the local NuGet source:
 
 ```powershell
 Copy-Item `
-    .\CodeConform.CSharp\bin\Release\CodeConform.CSharp.0.1.1.nupkg `
+    .\CodeConform.CSharp.Analyzers\bin\Release\CodeConform.CSharp.0.1.1.nupkg `
     D:\NuGetLocal\
 ```
 
@@ -564,7 +595,7 @@ return result;
 A typical local package development cycle is therefore:
 
 1. Make and test the CodeConform changes.
-2. Update `<Version>` in `CodeConform.CSharp.csproj`.
+2. Update `<Version>` in `CodeConform.CSharp.Analyzers.csproj`.
 3. Clean the previous Release build.
 4. Build the new NuGet package.
 5. Copy the package into the local NuGet source.
@@ -574,21 +605,21 @@ A typical local package development cycle is therefore:
 The core package commands are:
 
 ```powershell
-dotnet clean .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
+dotnet clean .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj -c Release
 
-dotnet pack .\CodeConform.CSharp\CodeConform.CSharp.csproj -c Release
+dotnet pack .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj -c Release
 ```
 
 After a successful package operation, the new package can be found under:
 
 ```text
-CodeConform.CSharp/bin/Release/
+CodeConform.CSharp.Analyzers/bin/Release/
 ```
 
 For example:
 
 ```text
-CodeConform.CSharp/bin/Release/CodeConform.CSharp.0.1.1.nupkg
+CodeConform.CSharp.Analyzers/bin/Release/CodeConform.CSharp.0.1.1.nupkg
 ```
 
 ## Status

@@ -1,0 +1,19 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run(int[] values)
+    {
+        Work();
+
+        // Process each value independently.
+        foreach (var value in values)
+        {
+            Work(value);
+        }
+    }
+
+    private void Work(int value = 0)
+    {
+    }
+}

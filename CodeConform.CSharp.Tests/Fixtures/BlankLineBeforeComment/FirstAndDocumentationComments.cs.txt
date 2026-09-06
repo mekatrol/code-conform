@@ -1,0 +1,19 @@
+namespace Fixtures;
+
+/// <summary>
+/// Provides a conforming sample.
+/// </summary>
+public sealed class Sample
+{
+    public void Run()
+    {
+        // This is the first item in the block.
+        Work();
+
+        Work(); // This is an end-of-line comment.
+    }
+
+    private void Work()
+    {
+    }
+}

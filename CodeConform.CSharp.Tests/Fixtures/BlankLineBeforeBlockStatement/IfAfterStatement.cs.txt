@@ -1,0 +1,17 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run(bool condition)
+    {
+        Work();
+        if (condition)
+        {
+            Work();
+        }
+    }
+
+    private void Work()
+    {
+    }
+}

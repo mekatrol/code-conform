@@ -1,0 +1,26 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run(bool condition)
+    {
+        if (condition)
+        {
+            Work();
+        }
+        else if (condition)
+        {
+            Work();
+        }
+
+        Work();
+        if (condition)
+            Work();
+
+        using var value = new System.IO.MemoryStream();
+    }
+
+    private void Work()
+    {
+    }
+}

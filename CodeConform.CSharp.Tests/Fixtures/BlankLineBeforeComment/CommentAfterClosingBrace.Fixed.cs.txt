@@ -1,0 +1,20 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run(bool condition)
+    {
+        if (condition)
+        {
+            Work();
+        }
+
+        // Explain the operation after the branch.
+        // The comment owns this whitespace boundary.
+        Work();
+    }
+
+    private void Work()
+    {
+    }
+}

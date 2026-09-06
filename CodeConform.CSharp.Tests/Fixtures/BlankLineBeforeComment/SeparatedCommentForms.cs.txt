@@ -1,0 +1,24 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run()
+    {
+        Work();
+
+        // A separated line-comment block.
+        // No diagnostic is required.
+        Work();
+
+        Work();
+
+        /*
+         * A separated multiline block comment.
+         */
+        Work();
+    }
+
+    private void Work()
+    {
+    }
+}

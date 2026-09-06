@@ -1,0 +1,24 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void LineComments(bool condition)
+    {
+        // Explain the first branch.
+        // No leading separator is required.
+        if (condition)
+        {
+        }
+    }
+
+    public void BlockComment(bool condition)
+    {
+        /*
+         * Explain the first loop.
+         */
+        while (condition)
+        {
+            break;
+        }
+    }
+}

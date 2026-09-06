@@ -1,0 +1,16 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run()
+    {
+        Work();
+
+        // Explain the next operation.
+        Work();
+    }
+
+    private void Work()
+    {
+    }
+}

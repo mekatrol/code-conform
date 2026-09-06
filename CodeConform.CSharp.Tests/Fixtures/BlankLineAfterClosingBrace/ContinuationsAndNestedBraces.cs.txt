@@ -1,0 +1,29 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run(bool condition)
+    {
+        if (condition)
+        {
+        }
+        else
+        {
+        }
+
+        try
+        {
+        }
+        catch (System.Exception)
+        {
+        }
+        finally
+        {
+        }
+
+        do
+        {
+        }
+        while (condition);
+    }
+}

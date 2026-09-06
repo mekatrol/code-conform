@@ -23,32 +23,63 @@ brace."
 CURRENT STATE
 =============
 
-The blank-line-before-return rule is now implemented, including its analyzer,
-code fix and test suite.
+The complete blank-line rule family is implemented with analyzers, code fixes,
+Fix All support and fixture-backed MSTest/Roslyn tests.
 
-Diagnostic:
-    CC0001
+Diagnostics and components:
+    CC0001 / BlankLineBeforeReturn
+        BlankLineBeforeReturnAnalyzer
+        BlankLineBeforeReturnCodeFixProvider
 
-Implemented components:
-    BlankLineBeforeReturnAnalyzer
-    BlankLineBeforeReturnCodeFixProvider
+    CC0002 / BlankLineBeforeBlockStatement
+        BlankLineBeforeBlockStatementAnalyzer
+        BlankLineBeforeBlockStatementCodeFixProvider
 
-The implementation handles:
-- return as the first statement in a block: no blank line required
-- return following another statement: blank line required
-- void returns
-- multiline return statements
-- returns following control-flow/block statements
-- multiple violations in the same document
-- documenting comments immediately associated with a return
-- single-line comment blocks
-- multiple consecutive single-line comments
-- multiline /* ... */ comments
-- code fix places the blank line before the documenting comment block rather
-  than between the comment and the return
+    CC0003 / BlankLineAfterClosingBrace
+        BlankLineAfterClosingBraceAnalyzer
+        BlankLineAfterClosingBraceCodeFixProvider
 
-The return analyzer and code fix have dedicated MSTest/Roslyn tests and
-.cs.txt fixtures.
+    CC0004 / BlankLineBeforeComment
+        BlankLineBeforeCommentAnalyzer
+        BlankLineBeforeCommentCodeFixProvider
+
+CC0001 handles expression and void returns, multiline returns, first-statement
+exemptions, multiple violations, and documenting comment blocks.
+
+CC0002 covers block-bodied if, for, foreach, while, do, switch, try, using,
+lock and fixed statements. Unbraced statements, using declarations and
+grammatical continuations such as else-if are excluded. A statement that is
+first in its Roslyn statement list is exempt.
+
+CC0003 covers semantic executable, namespace, type, enum and accessor-list
+closing braces. It excludes expression-level braces and does not separate:
+- consecutive closing braces
+- else, catch or finally clauses
+- the while clause of a do/while statement
+- required semicolons
+- the final closing brace at end of file
+
+CC0004 covers ordinary single-line and multiline comment blocks. It excludes:
+- XML documentation comments
+- end-of-line comments
+- directives
+- comments that are the first item after an opening brace
+- comments owned by CC0001 or CC0002
+
+Comment association supports single `//` comments, consecutive `//` blocks,
+multiline `/* ... */` blocks and mixed adjacent comment forms. Statement-specific
+rules place their separator before the first documenting comment rather than
+between the comment and statement.
+
+Each physical whitespace boundary has one diagnostic owner:
+1. CC0001 owns return boundaries.
+2. CC0002 owns supported block-opening statement boundaries.
+3. CC0004 owns remaining comment-leading boundaries.
+4. CC0003 owns remaining post-brace boundaries.
+
+This ownership order prevents duplicate diagnostics and contradictory Fix All
+edits. Code fixes preserve the document's existing newline convention, and
+fixed fixtures verify that another analyzer pass produces no further changes.
 
 PROJECT STRUCTURE
 =================
@@ -59,12 +90,19 @@ CodeConform.CSharp.Analyzers/
     Rules/
     Syntax/
     BlankLineBeforeReturnAnalyzer.cs
+    BlankLineBeforeBlockStatementAnalyzer.cs
+    BlankLineAfterClosingBraceAnalyzer.cs
+    BlankLineBeforeCommentAnalyzer.cs
     AnalyzerReleases.Shipped.md
     AnalyzerReleases.Unshipped.md
     CodeConform.CSharp.Analyzers.csproj
 
 CodeConform.CSharp.CodeFixes/
     BlankLineBeforeReturnCodeFixProvider.cs
+    BlankLineBeforeBlockStatementCodeFixProvider.cs
+    BlankLineAfterClosingBraceCodeFixProvider.cs
+    BlankLineBeforeCommentCodeFixProvider.cs
+    FormattingCodeFix.cs
     CodeConform.CSharp.CodeFixes.csproj
 
 CodeConform.CSharp.Tests/
@@ -72,6 +110,9 @@ CodeConform.CSharp.Tests/
     CodeFixes/
     Fixtures/
         BlankLineBeforeReturn/
+        BlankLineBeforeBlockStatement/
+        BlankLineAfterClosingBrace/
+        BlankLineBeforeComment/
     TestInfrastructure/
         FixtureLoader.cs
     CodeConform.CSharp.Tests.csproj
@@ -165,118 +206,18 @@ languages may never be implemented.
 NEXT OBJECTIVE
 ==============
 
-CC0001 / BlankLineBeforeReturn is complete.
+The four-rule formatting family is implemented. Continue by strengthening and
+maintaining it rather than redesigning the diagnostic decomposition without a
+specific reason.
 
-I now want to implement the REMAINING parts of the original formatting
-requirement systematically.
-
-The remaining behavior includes:
-
-1. Blank line BEFORE control-flow statements that open a block, unless the
-   control-flow statement is the first statement after an opening brace.
-
-   This needs careful definition of exactly which C# syntax constructs are
-   included, for example:
-   - if
-   - for
-   - foreach
-   - while
-   - do
-   - switch
-   - try
-   - using statement
-   - lock
-   - possibly other block-opening constructs where appropriate
-
-   We need to distinguish actual control-flow statements from constructs that
-   merely contain braces.
-
-2. COMMENT ASSOCIATION for those statements.
-
-   Example:
-
-       DoSomething();
-
-       // Explain why this branch is needed.
-       if (condition)
-       {
-       }
-
-   NOT:
-
-       DoSomething();
-       // Explain why this branch is needed.
-
-       if (condition)
-       {
-       }
-
-   A contiguous documenting comment block belongs with the following
-   statement.
-
-3. Blank line AFTER each closing brace unless it is followed by another
-   closing brace.
-
-   This needs precise handling of C# constructs where tokens such as:
-       else
-       catch
-       finally
-       while (for do/while)
-   legitimately follow a closing brace and should not be broken incorrectly.
-
-   We need to define the rule semantically using Roslyn syntax rather than
-   blindly processing `}` text.
-
-4. Blank line BEFORE a comment block that follows another statement, unless
-   the comment block is the first item after an opening brace.
-
-   Example requiring a blank line:
-
-       DoSomething();
-
-       // Explanation of what happens next.
-       DoSomethingElse();
-
-   But no leading blank line should be required here:
-
-       {
-           // First item in this block.
-           DoSomething();
-       }
-
-5. Interactions between all rules.
-
-   The rules must not fight each other or produce multiple contradictory
-   edits for the same whitespace.
-
-6. IDE/code-fix behavior and Fix All.
-
-7. Idempotency:
-
-       Conform(Conform(source)) == Conform(source)
-
-DESIGN REQUIREMENT
-==================
-
-Before implementing the next analyzer, help me decompose the remaining
-requirement into a small, coherent set of Roslyn diagnostics/code-fix
-providers.
-
-I do NOT want one diagnostic for every individual C# keyword if several
-constructs represent the same formatting rule.
-
-At the same time, do not create one giant analyzer/code fix if separating
-rules gives clearer diagnostics, tests and maintenance.
-
-Shared syntax/trivia logic should go into the analyzer project's Syntax/
-area where it genuinely prevents duplication.
-
-Start by proposing:
-1. the remaining diagnostic IDs and names,
-2. exactly what syntax each diagnostic covers,
-3. how the diagnostics interact,
-4. the recommended implementation order,
-5. the test categories required for each.
-
-Do not start writing all implementation files immediately. First establish
-and agree on the rule decomposition and edge-case semantics.
+For future changes:
+- add explicit positive, negative and edge-case tests before considering a
+  behavior complete
+- use .cs.txt input and *.Fixed.cs.txt output fixtures
+- cover plain statements, single comments, consecutive // comment blocks,
+  multiline /* ... */ blocks and mixed comment groups where applicable
+- test interactions to ensure only one diagnostic owns a whitespace boundary
+- verify Fix All and idempotency
+- update AnalyzerReleases.Unshipped.md and README.md when rule behavior changes
+- keep shared syntax/trivia logic in Syntax/ only where it prevents genuine
+  duplication

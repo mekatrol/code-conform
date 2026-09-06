@@ -1,0 +1,93 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run(bool condition, int[] values, object gate)
+    {
+        Work();
+        // Explain the condition.
+        // Keep both lines with the if statement.
+        if (condition)
+        {
+            Work();
+        }
+
+        Work();
+        /*
+         * Explain the indexed loop.
+         */
+        for (var index = 0; index < values.Length; index++)
+        {
+            Work(values[index]);
+        }
+
+        Work();
+        // Explain the enumeration.
+        // Keep the comment block contiguous.
+        foreach (var value in values)
+        {
+            Work(value);
+        }
+
+        Work();
+        /*
+         * Explain the conditional loop.
+         * Keep every block-comment line together.
+         */
+        while (condition)
+        {
+            break;
+        }
+
+        Work();
+        // Explain why one iteration is required.
+        // Keep this with the do statement.
+        do
+        {
+            Work();
+        }
+        while (false);
+
+        Work();
+        /*
+         * Explain the dispatch decision.
+         */
+        switch (values.Length)
+        {
+            default:
+                break;
+        }
+
+        Work();
+        // Explain the protected operation.
+        // Keep this with the try statement.
+        try
+        {
+            Work();
+        }
+        catch (System.Exception)
+        {
+        }
+
+        Work();
+        /*
+         * Explain ownership of the resource.
+         */
+        using (var stream = new System.IO.MemoryStream())
+        {
+            Work();
+        }
+
+        Work();
+        // Explain the synchronization boundary.
+        // Keep this with the lock statement.
+        lock (gate)
+        {
+            Work();
+        }
+    }
+
+    private void Work(int value = 0)
+    {
+    }
+}

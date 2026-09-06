@@ -1,0 +1,30 @@
+namespace Fixtures;
+
+public sealed class Sample
+{
+    public void Run(bool condition)
+    {
+        Work();
+
+        // Explain the branch.
+        // The existing separator is sufficient.
+        if (condition)
+        {
+            Work();
+        }
+
+        Work();
+
+        /*
+         * Explain the loop.
+         */
+        while (condition)
+        {
+            break;
+        }
+    }
+
+    private void Work()
+    {
+    }
+}
