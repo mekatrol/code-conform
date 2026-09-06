@@ -13,4 +13,9 @@
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<!-- Run CodeConform against its own code-fix implementation. -->
+		<Analyzer Include="..\CodeConform.CSharp.Analyzers\bin\$(Configuration)\netstandard2.0\CodeConform.CSharp.Analyzers.dll" />
+	</ItemGroup>
+
 </Project>

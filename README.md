@@ -84,6 +84,7 @@ The repository is intentionally small and uses a shallow project structure:
 code-conform/
 ├── CodeConform.CSharp.Analyzers/
 ├── CodeConform.CSharp.CodeFixes/
+├── CodeConform.CSharp.Validation/
 ├── CodeConform.CSharp.Tests/
 ├── .editorconfig
 ├── .gitignore
@@ -115,6 +116,14 @@ dependency and avoids Roslyn rule RS1038.
 
 Both assemblies are packaged under `analyzers/dotnet/cs` in the
 `CodeConform.CSharp` NuGet package.
+
+### CodeConform.CSharp.Validation
+
+Compiles the production analyzer and code-fix sources after the analyzer
+assembly has been created, then runs CC0001–CC0004 against those sources. This
+clean-build-safe validation step lets the solution enforce its own formatting
+rules even though an analyzer cannot execute during the compilation that
+creates that same analyzer assembly.
 
 ### CodeConform.CSharp.Tests
 
@@ -312,7 +321,9 @@ Build the solution using the default Debug configuration:
 dotnet build CodeConform.slnx
 ```
 
-This builds the analyzer, code-fix, and test projects.
+This builds the analyzer, code-fix, validation, and test projects. CC0001–CC0004
+are configured as errors in this repository, so a formatting violation in the
+production analyzer or code-fix sources fails the solution build.
 
 Because the test project uses the CodeConform analyzer during compilation, CodeConform diagnostics can also be reported while building the repository itself.
 

@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+		<IsPackable>false</IsPackable>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<!-- This validation-only assembly intentionally combines both source sets. -->
+		<NoWarn>$(NoWarn);RS1038</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!--
+		Compile the production sources after the analyzer assembly has been built.
+		This avoids the impossible circular dependency that would result from an
+		analyzer attempting to execute during the compilation that creates it.
+		-->
+		<Compile Include="..\CodeConform.CSharp.Analyzers\**\*.cs"
+		         Exclude="..\CodeConform.CSharp.Analyzers\bin\**;..\CodeConform.CSharp.Analyzers\obj\**"
+		         Link="Analyzers\%(RecursiveDir)%(Filename)%(Extension)" />
+		<Compile Include="..\CodeConform.CSharp.CodeFixes\**\*.cs"
+		         Exclude="..\CodeConform.CSharp.CodeFixes\bin\**;..\CodeConform.CSharp.CodeFixes\obj\**"
+		         Link="CodeFixes\%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="..\CodeConform.CSharp.Analyzers\AnalyzerReleases.Shipped.md" />
+		<AdditionalFiles Include="..\CodeConform.CSharp.Analyzers\AnalyzerReleases.Unshipped.md" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj"
+		                  OutputItemType="Analyzer"
+		                  ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+</Project>

@@ -105,6 +105,9 @@ CodeConform.CSharp.CodeFixes/
     FormattingCodeFix.cs
     CodeConform.CSharp.CodeFixes.csproj
 
+CodeConform.CSharp.Validation/
+    CodeConform.CSharp.Validation.csproj
+
 CodeConform.CSharp.Tests/
     Analyzers/
     CodeFixes/
@@ -128,6 +131,9 @@ The analyzer and code-fix assemblies are deliberately separate:
 - This separation avoids Roslyn RS1038.
 - The NuGet PackageId remains CodeConform.CSharp.
 - Both assemblies are packaged under analyzers/dotnet/cs.
+- The validation project recompiles both production source sets after the
+  analyzer has been built so CC0001-CC0004 can fail a solution build for
+  violations in analyzer sources as well as code-fix sources.
 
 TECHNOLOGY / CONVENTIONS
 ========================

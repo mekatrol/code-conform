@@ -10,6 +10,7 @@
   <Project Path="CodeConform.CSharp.CodeFixes/CodeConform.CSharp.CodeFixes.csproj" Id="2f3c5259-3949-402b-b61c-d585a61c7453" />
   <Project Path="CodeConform.CSharp.Tests/CodeConform.CSharp.Tests.csproj" />
   <Project Path="CodeConform.CSharp.Analyzers/CodeConform.CSharp.Analyzers.csproj" />
+  <Project Path="CodeConform.CSharp.Validation/CodeConform.CSharp.Validation.csproj" />
 </Solution>
 
 
