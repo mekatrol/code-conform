@@ -32,6 +32,13 @@ public sealed class BlankLineBeforeReturnAnalyzer : DiagnosticAnalyzer
             return;
         }
 
+        var blockLineSpan = block.SyntaxTree.GetLineSpan(block.Span);
+
+        if (blockLineSpan.StartLinePosition.Line == blockLineSpan.EndLinePosition.Line)
+        {
+            return;
+        }
+
         var index = block.Statements.IndexOf(returnStatement);
 
         if (index <= 0)

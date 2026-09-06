@@ -1,0 +1,12 @@
+namespace Fixtures;
+
+public sealed class ControllerTemplate
+{
+}
+
+public sealed class Defaults
+{
+    public static ControllerTemplate Default { get; } = new()
+    {
+    };
+}

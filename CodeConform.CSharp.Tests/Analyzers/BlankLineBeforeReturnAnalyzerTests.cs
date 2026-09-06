@@ -28,6 +28,19 @@ public sealed class BlankLineBeforeReturnAnalyzerTests
     }
 
     /// <summary>
+    /// Verifies that a return following another statement inside a completely
+    /// single-line block is exempt because a physical blank line cannot be
+    /// inserted without expanding the block. Expected result: no CC0001
+    /// diagnostic is produced.
+    /// </summary>
+    [TestMethod]
+    public async Task ReturnInSingleLineTryBlockDoesNotReportDiagnostic()
+    {
+        await VerifyNoDiagnosticAsync(
+            "ReturnInSingleLineTryBlock.cs.txt");
+    }
+
+    /// <summary>
     /// Verifies that a return statement separated from the preceding statement
     /// by a blank line satisfies the formatting rule.
     /// Expected result: no CC0001 diagnostic is produced.

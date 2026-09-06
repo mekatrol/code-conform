@@ -240,6 +240,9 @@ Currently implemented rules are:
 | `CC0003` | Blank line required after a semantic closing brace       |
 | `CC0004` | Blank line required before an ordinary comment block     |
 
+CC0001 excludes returns inside blocks written completely on one physical line,
+where inserting a blank line would require expanding the block.
+
 CC0002 covers block-bodied `if`, `for`, `foreach`, `while`, `do`, `switch`,
 `try`, `using`, `lock`, and `fixed` statements. It does not apply to unbraced
 embedded statements, using declarations, or grammatical continuations such as
@@ -247,7 +250,8 @@ embedded statements, using declarations, or grammatical continuations such as
 
 CC0003 recognizes syntax-tree brace ownership instead of processing every `}`
 character. It preserves `else`, `catch`, `finally`, the `while` clause of a
-do/while statement, required semicolons, and adjacent closing braces.
+do/while statement, property initializers, single-line accessor lists, required
+semicolons, and adjacent closing braces.
 
 CC0004 applies to ordinary `//` and `/* ... */` comment blocks. XML
 documentation, end-of-line comments, directives, and comments that are the
@@ -348,6 +352,28 @@ The analyzer test suite verifies both correctly formatted source and source that
 
 `CodeConform.CSharp` is distributed as one Roslyn analyzer package containing
 the compiler-safe analyzer assembly and the separate code-fix assembly.
+
+To restore, test, and build the package directly into `D:\NuGetLocal`, run:
+
+```powershell
+& .\Scripts\Build-LocalPackage.ps1
+```
+
+The command cleans, restores, and builds the complete Release solution, then
+runs the tests without rebuilding and packages the verified build. It also
+increments the minor package version in
+`CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj` before
+packing—for example, `0.1.0` becomes `0.2.0`. This ensures NuGet and Visual
+Studio detect the rebuilt package as a newer version.
+
+An alternate destination or exact package version can be supplied when needed.
+An explicit version is also written to the project metadata:
+
+```powershell
+& .\Scripts\Build-LocalPackage.ps1 `
+    -PackageSource 'E:\NuGetLocal' `
+    -Version '0.1.0-local.2'
+```
 
 Run the following commands from the CodeConform repository root in PowerShell:
 

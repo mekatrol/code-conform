@@ -1,0 +1,18 @@
+namespace Fixtures;
+
+public enum FlowExecutionModeType
+{
+    Manual
+}
+
+public enum InputQualityPolicyType
+{
+    RequireGood
+}
+
+public sealed class Settings
+{
+    public FlowExecutionModeType Mode { get; init; } = FlowExecutionModeType.Manual;
+    public uint IntervalMs { get; init; }
+    public InputQualityPolicyType InputQualityPolicy { get; init; } = InputQualityPolicyType.RequireGood;
+}

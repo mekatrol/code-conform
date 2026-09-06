@@ -61,6 +61,32 @@ public sealed class BlankLineAfterClosingBraceAnalyzerTests
     }
 
     /// <summary>
+    /// Verifies that an auto-property accessor list remains joined to its
+    /// initializer. Expected result: neither the accessor-list brace nor the
+    /// object-initializer brace produces a CC0003 diagnostic.
+    /// </summary>
+    [TestMethod]
+    public async Task AutoPropertyWithObjectInitializerDoesNotReportDiagnostic()
+    {
+        var test = CreateTest("AutoPropertyWithObjectInitializer.cs.txt");
+
+        await test.RunAsync();
+    }
+
+    /// <summary>
+    /// Verifies that consecutive single-line auto-properties are not treated
+    /// as multiline semantic bodies. Expected result: an uninitialized
+    /// auto-property between initialized properties produces no CC0003 diagnostic.
+    /// </summary>
+    [TestMethod]
+    public async Task ConsecutiveSingleLineAutoPropertiesDoNotReportDiagnostic()
+    {
+        var test = CreateTest("ConsecutiveSingleLineAutoProperties.cs.txt");
+
+        await test.RunAsync();
+    }
+
+    /// <summary>
     /// Verifies that CC0003 yields ownership when an ordinary comment block
     /// follows a closing brace. Expected result: no CC0003 diagnostic is
     /// produced because CC0004 owns the same whitespace boundary.

@@ -17,7 +17,7 @@
 
 		<!-- NuGet package metadata -->
 		<PackageId>CodeConform.CSharp</PackageId>
-		<Version>0.1.0</Version>
+		<Version>0.6.0</Version>
 		<Authors>Mekatrol</Authors>
 		<Description>Custom C# code quality and formatting rules.</Description>
 		<PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>

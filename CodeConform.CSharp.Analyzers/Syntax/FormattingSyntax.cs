@@ -139,10 +139,16 @@ internal static class FormattingSyntax
             return block.Parent is not AnonymousFunctionExpressionSyntax;
         }
 
+        if (token.Parent is AccessorListSyntax accessorList)
+        {
+            var lineSpan = accessorList.SyntaxTree.GetLineSpan(accessorList.Span);
+
+            return lineSpan.StartLinePosition.Line != lineSpan.EndLinePosition.Line;
+        }
+
         return token.Parent is SwitchStatementSyntax ||
             token.Parent is BaseNamespaceDeclarationSyntax ||
-            token.Parent is BaseTypeDeclarationSyntax ||
-            token.Parent is AccessorListSyntax;
+            token.Parent is BaseTypeDeclarationSyntax;
     }
 
     /// <summary>
@@ -160,6 +166,12 @@ internal static class FormattingSyntax
             nextToken.IsKind(SyntaxKind.FinallyKeyword))
         {
             return true;
+        }
+
+        if (nextToken.IsKind(SyntaxKind.EqualsToken) &&
+            closingBrace.Parent is AccessorListSyntax accessorList)
+        {
+            return accessorList.Parent is PropertyDeclarationSyntax;
         }
 
         return nextToken.IsKind(SyntaxKind.WhileKeyword) &&
