@@ -1,0 +1,15 @@
+internal static class TestClass
+{
+    public static int GetValue()
+    {
+        for (var index = 0; index < 1; index++)
+        {
+            DoSomething();
+        }
+        return 42;
+    }
+
+    private static void DoSomething()
+    {
+    }
+}

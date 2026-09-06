@@ -1,0 +1,11 @@
+internal static class TestClass
+{
+    public static int GetValue(bool condition)
+    {
+        while (condition)
+        {
+            break;
+        }
+        return 42;
+    }
+}

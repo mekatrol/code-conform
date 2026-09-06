@@ -1,0 +1,15 @@
+internal static class TestClass
+{
+    public static int GetValue(int[] values)
+    {
+        foreach (var value in values)
+        {
+            DoSomething(value);
+        }
+        return 42;
+    }
+
+    private static void DoSomething(int value)
+    {
+    }
+}

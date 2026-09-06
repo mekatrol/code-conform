@@ -1,0 +1,13 @@
+using System.IO;
+
+internal static class TestClass
+{
+    public static int GetValue()
+    {
+        using (var stream = new MemoryStream())
+        {
+            stream.WriteByte(42);
+        }
+        return 42;
+    }
+}

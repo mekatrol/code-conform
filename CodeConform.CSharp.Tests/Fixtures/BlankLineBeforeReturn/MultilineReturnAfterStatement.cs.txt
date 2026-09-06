@@ -1,0 +1,19 @@
+internal static class TestClass
+{
+    public static int GetValue()
+    {
+        DoSomething();
+        return CalculateValue(
+            1,
+            2);
+    }
+
+    private static void DoSomething()
+    {
+    }
+
+    private static int CalculateValue(int left, int right)
+    {
+        return left + right;
+    }
+}

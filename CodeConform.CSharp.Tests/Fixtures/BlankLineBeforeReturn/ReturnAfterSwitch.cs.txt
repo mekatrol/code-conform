@@ -1,0 +1,15 @@
+internal static class TestClass
+{
+    public static int GetValue(int value)
+    {
+        switch (value)
+        {
+            case 1:
+                break;
+
+            default:
+                break;
+        }
+        return 42;
+    }
+}

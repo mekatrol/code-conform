@@ -1,0 +1,14 @@
+internal static class TestClass
+{
+    public static int GetValue()
+    {
+        DoSomething();
+        // The calculation is complete.
+        // Return the calculated value.
+        return 42;
+    }
+
+    private static void DoSomething()
+    {
+    }
+}

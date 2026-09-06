@@ -1,0 +1,10 @@
+internal static class TestClass
+{
+    public static int GetValue()
+    {
+        static void LocalFunction()
+        {
+        }
+        return 42;
+    }
+}

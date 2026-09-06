@@ -1,0 +1,8 @@
+internal static class TestClass
+{
+    public static int GetValue()
+    {
+        System.Console.WriteLine("Calculating value");
+        return 42;
+    }
+}

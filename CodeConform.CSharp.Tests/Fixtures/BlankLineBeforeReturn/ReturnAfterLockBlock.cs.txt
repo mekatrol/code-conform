@@ -1,0 +1,17 @@
+internal static class TestClass
+{
+    private static readonly object SyncRoot = new();
+
+    public static int GetValue()
+    {
+        lock (SyncRoot)
+        {
+            DoSomething();
+        }
+        return 42;
+    }
+
+    private static void DoSomething()
+    {
+    }
+}

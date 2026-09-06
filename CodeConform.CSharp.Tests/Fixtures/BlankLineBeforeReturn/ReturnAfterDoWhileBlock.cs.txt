@@ -1,0 +1,16 @@
+internal static class TestClass
+{
+    public static int GetValue(bool condition)
+    {
+        do
+        {
+            DoSomething();
+        }
+        while (condition);
+        return 42;
+    }
+
+    private static void DoSomething()
+    {
+    }
+}
