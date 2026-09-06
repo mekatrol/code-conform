@@ -1,11 +1,9 @@
-﻿using System.Collections.Immutable;
-
-using CodeConform.CSharp.Rules;
-
+﻿using CodeConform.CSharp.Rules;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
 
 namespace CodeConform.CSharp.Analyzers;
 

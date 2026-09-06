@@ -6,6 +6,7 @@
     <File Path="Directory.Packages.props" />
     <File Path="README.md" />
   </Folder>
+  <Project Path="CodeConform.CSharp.CodeFixes/CodeConform.CSharp.CodeFixes.csproj" Id="2f3c5259-3949-402b-b61c-d585a61c7453" />
   <Project Path="CodeConform.CSharp.Tests/CodeConform.CSharp.Tests.csproj" />
   <Project Path="CodeConform.CSharp/CodeConform.CSharp.csproj" />
 </Solution>
