@@ -335,124 +335,44 @@ The analyzer test suite verifies both correctly formatted source and source that
 
 ## Building the NuGet Package
 
-`CodeConform.CSharp` is distributed as a Roslyn analyzer NuGet package.
+`CodeConform.CSharp` is distributed as one Roslyn analyzer package containing
+the compiler-safe analyzer assembly and the separate code-fix assembly.
 
-Creating a new package consists of:
+Run the following commands from the CodeConform repository root in PowerShell:
 
-1. updating the package version
-2. cleaning previous Release build output
-3. creating a new Release package
-4. locating and optionally copying the generated package to a local NuGet source
+```powershell
+dotnet restore .\CodeConform.slnx
+dotnet test .\CodeConform.slnx -c Release --no-restore
+dotnet pack `
+    .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj `
+    -c Release `
+    --no-restore
+```
 
-### 1. Update the Package Version
-
-Before creating a new package, update the package version in:
+The package is written to:
 
 ```text
-CodeConform.CSharp.Analyzers/CodeConform.CSharp.Analyzers.csproj
+CodeConform.CSharp.Analyzers/bin/Release/CodeConform.CSharp.0.1.0.nupkg
 ```
 
-For example:
+The filename uses the `<Version>` declared in
+`CodeConform.CSharp.Analyzers/CodeConform.CSharp.Analyzers.csproj`.
 
-```xml
-<Version>0.1.1</Version>
+For repeated local testing, use a unique prerelease version without editing the
+project file:
+
+```powershell
+dotnet pack `
+    .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj `
+    -c Release `
+    --no-restore `
+    -p:Version=0.1.0-local.1
 ```
 
-The package version becomes part of the generated NuGet package filename.
-
-For example, version:
-
-```xml
-<Version>0.1.1</Version>
-```
-
-produces:
-
-```text
-CodeConform.CSharp.0.1.1.nupkg
-```
-
-The version should be changed whenever a new package needs to be distinguishable from a previously built or installed package.
-
-This is particularly important when testing packages locally because NuGet caches packages by package ID and version. Rebuilding a package using an unchanged version can therefore result in an older cached package being used instead of the newly built package.
-
-### 2. Clean the Previous Release Build
-
-Before creating the package, clean the Release configuration:
-
-```console
-dotnet clean .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj -c Release
-```
-
-This removes output from previous Release builds, including files under the project's Release `bin` and `obj` directories.
-
-Cleaning before packaging helps ensure that the new package is created from the current source rather than accidentally relying on stale build output.
-
-The command specifically cleans:
-
-```text
-CodeConform.CSharp.Analyzers/CodeConform.CSharp.Analyzers.csproj
-```
-
-using:
-
-```text
--c Release
-```
-
-which is shorthand for:
-
-```text
---configuration Release
-```
-
-This is separate from the normal Debug build used during development.
-
-### 3. Create a New Release Package
-
-Create the NuGet package with:
-
-```console
-dotnet pack .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj -c Release
-```
-
-`dotnet pack` performs the Release build required for packaging and then creates the `.nupkg` file.
-
-The command packages:
-
-```text
-CodeConform.CSharp.Analyzers/CodeConform.CSharp.Analyzers.csproj
-```
-
-using the Release configuration.
-
-A successful command will build:
-
-```text
-CodeConform.CSharp.Analyzers/bin/Release/netstandard2.0/CodeConform.CSharp.Analyzers.dll
-```
-
-and create the NuGet package.
-
-The generated package is written to:
-
-```text
-CodeConform.CSharp.Analyzers/bin/Release/
-```
-
-For example:
-
-```text
-CodeConform.CSharp.Analyzers/bin/Release/CodeConform.CSharp.0.1.1.nupkg
-```
-
-The exact filename depends on the value of:
-
-```xml
-<Version>...</Version>
-```
-
-in `CodeConform.CSharp.csproj`.
+Increment the suffix for every rebuilt package, for example `local.2` and
+`local.3`. NuGet caches packages by package ID and version, so overwriting a
+package while retaining the same version can cause a consuming repository to
+continue using cached contents.
 
 ### Analyzer Package Structure
 
@@ -482,76 +402,120 @@ It is intentionally not packaged as:
 lib/netstandard2.0/CodeConform.CSharp.Analyzers.dll
 ```
 
-because consuming applications do not need `CodeConform.CSharp.dll` as a runtime dependency.
+because consuming applications do not need either assembly as a runtime
+dependency.
 
 ## Using the NuGet Package Locally
 
-A local NuGet source can be used to test CodeConform without publishing the package to a remote NuGet repository.
+A directory containing `.nupkg` files can be used as a local NuGet source. The
+examples below use `D:\NuGetLocal`; another absolute directory can be used if
+preferred.
 
-### Create a Local NuGet Source
+### 1. Create and Register the Local Source
 
-For example, create:
+Create the directory once:
 
 ```powershell
 New-Item -ItemType Directory -Path D:\NuGetLocal
 ```
 
-Register the directory as a NuGet package source:
+Register it as a named source:
 
 ```powershell
-dotnet nuget add source D:\NuGetLocal --name Local
+dotnet nuget add source D:\NuGetLocal --name CodeConformLocal
 ```
 
-The configured NuGet sources can be checked with:
+Confirm that the source is registered and enabled:
 
 ```powershell
 dotnet nuget list source
 ```
 
-### Copy the Package to the Local Source
+If the source already exists, `dotnet nuget add source` reports that fact and
+does not need to be run again.
 
-After building the package, copy it into the local NuGet source:
+### 2. Pack Directly into the Local Source
+
+From the CodeConform repository root, test and pack a unique local version
+directly into the feed directory:
 
 ```powershell
-Copy-Item `
-    .\CodeConform.CSharp.Analyzers\bin\Release\CodeConform.CSharp.0.1.1.nupkg `
-    D:\NuGetLocal\
+dotnet test .\CodeConform.slnx -c Release
+
+dotnet pack `
+    .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj `
+    -c Release `
+    --no-restore `
+    -p:Version=0.1.0-local.1 `
+    --output D:\NuGetLocal
 ```
 
-Change the filename to match the version that was just built.
-
-The local source will then contain, for example:
+The resulting file is:
 
 ```text
 D:\NuGetLocal\
-└── CodeConform.CSharp.0.1.1.nupkg
+└── CodeConform.CSharp.0.1.0-local.1.nupkg
 ```
 
-### Install the Local Package
+### 3. Reference the Package from Another Repository
 
-From another C# project, install the package using the local source:
+Change to the other repository and add the package to each C# project that
+should run the analyzer. Supplying the project path is clearer when the
+solution contains multiple projects:
 
 ```powershell
-dotnet add package CodeConform.CSharp `
-    --version 0.1.1 `
+dotnet add .\src\MyProject\MyProject.csproj package CodeConform.CSharp `
+    --version 0.1.0-local.1 `
     --source D:\NuGetLocal
 ```
 
-The package can also be referenced directly in the consuming project's `.csproj`:
+Replace the example project path with the actual consuming project. The command
+adds a `PackageReference`; for an analyzer-only dependency, the recommended
+project entry is:
 
 ```xml
 <ItemGroup>
-    <PackageReference Include="CodeConform.CSharp"
-                      Version="0.1.1"
-                      PrivateAssets="all" />
+    <PackageReference Include="CodeConform.CSharp" Version="0.1.0-local.1">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
 </ItemGroup>
 ```
 
-`PrivateAssets="all"` prevents the analyzer package from becoming a transitive dependency of projects that consume the resulting application or library package.
+`PrivateAssets="all"` prevents CodeConform from becoming a dependency of a
+package produced by the consuming project. `IncludeAssets` retains analyzer
+and build assets for the current project.
 
-### Verify the Analyzer
+If the consuming repository uses Central Package Management, put the version
+in its `Directory.Packages.props`:
 
-Add deliberately non-conforming code to the consuming project:
+```xml
+<ItemGroup>
+    <PackageVersion Include="CodeConform.CSharp" Version="0.1.0-local.1" />
+</ItemGroup>
+```
+
+Then omit `Version` from the project reference:
+
+```xml
+<ItemGroup>
+    <PackageReference Include="CodeConform.CSharp">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+</ItemGroup>
+```
+
+Restore and build the consuming solution:
+
+```powershell
+dotnet restore .\MyOtherSolution.slnx
+dotnet build .\MyOtherSolution.slnx
+```
+
+### 4. Verify the Analyzer
+
+Add deliberately non-conforming code inside a method in the consuming project:
 
 ```csharp
 var result = GetResult();
@@ -590,37 +554,76 @@ var result = GetResult();
 return result;
 ```
 
-## Package Development Workflow
+To verify all current rules, examples of violations include:
 
-A typical local package development cycle is therefore:
+```csharp
+DoSomething();
+if (condition)
+{
+}
+DoSomethingElse();
+// Explain the next operation.
+DoAnotherThing();
+```
 
-1. Make and test the CodeConform changes.
-2. Update `<Version>` in `CodeConform.CSharp.Analyzers.csproj`.
-3. Clean the previous Release build.
-4. Build the new NuGet package.
-5. Copy the package into the local NuGet source.
-6. Update the consuming test project to the new package version.
-7. Restore and build the consuming project.
+These boundaries can produce CC0002, CC0003, and CC0004 respectively. In
+Visual Studio, the corresponding code-fix provider should offer an action that
+inserts the missing blank line. Reload the consuming solution after installing
+or changing the analyzer package so the IDE loads the new assemblies.
 
-The core package commands are:
+### 5. Configure Diagnostic Severity
+
+The consuming repository can configure each rule in `.editorconfig`:
+
+```ini
+[*.cs]
+
+dotnet_diagnostic.CC0001.severity = warning
+dotnet_diagnostic.CC0002.severity = warning
+dotnet_diagnostic.CC0003.severity = warning
+dotnet_diagnostic.CC0004.severity = warning
+```
+
+Use `error` while validating integration if the build should fail on a
+violation.
+
+### 6. Install a Rebuilt Local Version
+
+Pack a new unique version in the CodeConform repository:
 
 ```powershell
-dotnet clean .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj -c Release
-
-dotnet pack .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj -c Release
+dotnet pack `
+    .\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj `
+    -c Release `
+    -p:Version=0.1.0-local.2 `
+    --output D:\NuGetLocal
 ```
 
-After a successful package operation, the new package can be found under:
+Then update the consuming project or `Directory.Packages.props` from
+`0.1.0-local.1` to `0.1.0-local.2` and restore again. Incrementing the version
+is preferred to clearing all NuGet caches.
 
-```text
-CodeConform.CSharp.Analyzers/bin/Release/
+If an unchanged version must be reused during troubleshooting, clear NuGet's
+local caches and restore the consuming solution:
+
+```powershell
+dotnet nuget locals all --clear
+dotnet restore .\MyOtherSolution.slnx --force
 ```
 
-For example:
+Clearing all local caches affects every locally restored package, so use this
+only when changing the package version is impractical.
 
-```text
-CodeConform.CSharp.Analyzers/bin/Release/CodeConform.CSharp.0.1.1.nupkg
-```
+## Package Development Workflow
+
+A typical local development cycle is:
+
+1. Implement and test a CodeConform change.
+2. Run the Release test suite.
+3. Pack a new `0.1.0-local.N` version into `D:\NuGetLocal`.
+4. Update the version in the consuming repository.
+5. Restore and build the consuming solution.
+6. Open or reload the solution in Visual Studio and verify its code fixes.
 
 ## Status
 
