@@ -592,7 +592,31 @@ Visual Studio, the corresponding code-fix provider should offer an action that
 inserts the missing blank line. Reload the consuming solution after installing
 or changing the analyzer package so the IDE loads the new assemblies.
 
-### 5. Configure Diagnostic Severity
+### 5. Analyze Without Applying Fixes
+
+A normal build runs CodeConform's analyzers and reports diagnostics without
+invoking any code-fix providers or changing source files:
+
+```powershell
+dotnet build
+```
+
+To perform a dedicated CodeConform formatting check without modifying files,
+use `dotnet format analyzers` with `--verify-no-changes`:
+
+```powershell
+dotnet format analyzers `
+    --verify-no-changes `
+    --severity info `
+    --diagnostics CC0001 CC0002 CC0003 CC0004
+```
+
+This command exits with a nonzero status when CodeConform finds changes that
+would be required, which makes it suitable for validation scripts and CI. Keep
+`--verify-no-changes` when report-only behavior is required; without it,
+`dotnet format analyzers` can apply the available fixes.
+
+### 6. Configure Diagnostic Severity
 
 The consuming repository can configure each rule in `.editorconfig`:
 
@@ -608,7 +632,7 @@ dotnet_diagnostic.CC0004.severity = warning
 Use `error` while validating integration if the build should fail on a
 violation.
 
-### 6. Install a Rebuilt Local Version
+### 7. Install a Rebuilt Local Version
 
 Pack a new unique version in the CodeConform repository:
 
