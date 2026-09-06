@@ -1,0 +1,22 @@
+internal static class TestClass
+{
+    public static int GetValue(bool condition)
+    {
+        var value = 42;
+
+        if (condition)
+        {
+            DoSomething();
+
+            return value;
+        }
+
+        DoSomething();
+
+        return value;
+    }
+
+    private static void DoSomething()
+    {
+    }
+}

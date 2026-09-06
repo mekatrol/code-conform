@@ -1,4 +1,4 @@
-﻿using CodeConform.CSharp.Rules;
+﻿using CodeConform.CSharp.Analyzers.Rules;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;

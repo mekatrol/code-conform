@@ -1,0 +1,13 @@
+internal static class TestClass
+{
+    public static int CountItems(int[] values)
+    {
+        var count = 0;
+        foreach (var value in values)
+        {
+            count += value;
+        }
+
+        return count;
+    }
+}

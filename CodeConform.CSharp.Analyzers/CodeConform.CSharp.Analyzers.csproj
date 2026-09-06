@@ -25,8 +25,7 @@
 
 	<ItemGroup>
 		<!-- Roslyn compiler APIs used by diagnostic analyzers. -->
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp"
-						  PrivateAssets="all" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -43,21 +42,13 @@
 	Package the compiler-safe analyzer assembly without exposing its physical
 	bin directory as part of the project hierarchy in Solution Explorer.
 	-->
-		<None Include="$(OutputPath)$(AssemblyName).dll"
-			  Pack="true"
-			  PackagePath="analyzers/dotnet/cs"
-			  Visible="false"
-			  Link="Package\$(AssemblyName).dll" />
+		<None Include="$(OutputPath)$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" Link="Package\$(AssemblyName).dll" />
 
 		<!--
 	Package the separate code-fix assembly without exposing its physical output
 	directory as part of this project's hierarchy.
 	-->
-		<None Include="..\CodeConform.CSharp.CodeFixes\bin\$(Configuration)\netstandard2.0\CodeConform.CSharp.CodeFixes.dll"
-			  Pack="true"
-			  PackagePath="analyzers/dotnet/cs"
-			  Visible="false"
-			  Link="Package\CodeConform.CSharp.CodeFixes.dll" />
+		<None Include="..\CodeConform.CSharp.CodeFixes\bin\$(Configuration)\netstandard2.0\CodeConform.CSharp.CodeFixes.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" Link="Package\CodeConform.CSharp.CodeFixes.dll" />
 	</ItemGroup>
 
 	<!--
@@ -68,12 +59,8 @@
 	project dependency. Invoking MSBuild here keeps the compile-time dependency
 	direction correct while ensuring the DLL exists before packing.
 	-->
-	<Target Name="BuildCodeFixesForPack"
-			BeforeTargets="GenerateNuspec"
-			Condition="'$(IsPacking)' == 'true'">
-		<MSBuild Projects="..\CodeConform.CSharp.CodeFixes\CodeConform.CSharp.CodeFixes.csproj"
-				 Targets="Build"
-				 Properties="Configuration=$(Configuration)" />
+	<Target Name="BuildCodeFixesForPack" BeforeTargets="GenerateNuspec" Condition="'$(IsPacking)' == 'true'">
+		<MSBuild Projects="..\CodeConform.CSharp.CodeFixes\CodeConform.CSharp.CodeFixes.csproj" Targets="Build" Properties="Configuration=$(Configuration)" />
 	</Target>
 
 </Project>

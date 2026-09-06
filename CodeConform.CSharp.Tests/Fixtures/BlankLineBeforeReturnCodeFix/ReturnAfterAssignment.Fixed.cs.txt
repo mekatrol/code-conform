@@ -1,0 +1,10 @@
+internal static class TestClass
+{
+    public static int GetValue()
+    {
+        var value = 0;
+        value = 42;
+
+        return value;
+    }
+}

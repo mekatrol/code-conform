@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace CodeConform.CSharp.Rules;
+namespace CodeConform.CSharp.Analyzers.Rules;
 
 internal static class DiagnosticDescriptors
 {

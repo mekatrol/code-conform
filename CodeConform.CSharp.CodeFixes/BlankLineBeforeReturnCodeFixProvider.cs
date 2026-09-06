@@ -1,7 +1,8 @@
-﻿using CodeConform.CSharp.Rules;
+﻿using CodeConform.CSharp.Analyzers.Rules;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Collections.Immutable;
@@ -132,7 +133,8 @@ public sealed class BlankLineBeforeReturnCodeFixProvider : CodeFixProvider
     }
 
     /// <summary>
-    /// Inserts a blank line immediately before the specified return statement.
+    /// Inserts the blank-line separator required by CC0001 before the specified
+    /// return statement or before its immediately preceding documenting comments.
     /// </summary>
     /// <param name="document">
     /// The document containing the return statement.
@@ -153,8 +155,16 @@ public sealed class BlankLineBeforeReturnCodeFixProvider : CodeFixProvider
     /// <see cref="Document"/> are returned instead.
     /// </para>
     /// <para>
-    /// The inserted text consists only of an additional line ending. The
-    /// indentation and contents of the return statement remain unchanged.
+    /// The insertion location is determined by
+    /// <see cref="GetInsertionPosition(ReturnStatementSyntax, SourceText)"/>.
+    /// When the return statement is immediately preceded by one or more
+    /// documenting comments, the separator is inserted before the entire
+    /// contiguous comment block. Otherwise, it is inserted immediately before
+    /// the return statement.
+    /// </para>
+    /// <para>
+    /// The inserted text consists only of an additional line ending. Existing
+    /// indentation, comments and statement contents remain unchanged.
     /// </para>
     /// </remarks>
     private static async Task<Document> InsertBlankLineAsync(
@@ -162,36 +172,112 @@ public sealed class BlankLineBeforeReturnCodeFixProvider : CodeFixProvider
         ReturnStatementSyntax returnStatement,
         CancellationToken cancellationToken)
     {
-        // Obtain the exact source representation so the fix can preserve the
-        // document's existing whitespace and line-ending convention.
         var sourceText = await document.GetTextAsync(
             cancellationToken).ConfigureAwait(false);
 
-        // Determine the physical source line containing the beginning of the
-        // return statement. The new line ending is inserted at the start of
-        // this line so the statement's indentation remains untouched.
-        var returnLine = sourceText.Lines.GetLineFromPosition(
-            returnStatement.SpanStart);
+        var insertionPosition = GetInsertionPosition(
+            returnStatement,
+            sourceText);
 
-        // Resolve the newline convention from the source near the diagnostic.
-        // This avoids assuming that the consumer uses the same convention as
-        // the operating system on which CodeConform happens to execute.
+        var insertionLine = sourceText.Lines.GetLineFromPosition(
+            insertionPosition);
+
         var lineBreak = await GetLineBreakAsync(
             document,
             sourceText,
-            returnLine.LineNumber,
+            insertionLine.LineNumber,
             cancellationToken).ConfigureAwait(false);
 
-        // Inserting one additional line ending at the beginning of the return
-        // line creates the required empty line without rewriting surrounding
-        // syntax or invoking a general-purpose formatter.
         var newText = sourceText.WithChanges(
             new TextChange(
-                new TextSpan(returnLine.Start, 0),
+                new TextSpan(insertionLine.Start, 0),
                 lineBreak));
 
-        // Return a new immutable document for Roslyn to apply.
         return document.WithText(newText);
+    }
+
+    /// <summary>
+    /// Determines the source position at which the CC0001 blank-line separator
+    /// should be inserted for the specified return statement.
+    /// </summary>
+    /// <param name="returnStatement">
+    /// The return statement for which an insertion position is required.
+    /// </param>
+    /// <param name="sourceText">
+    /// The complete source text containing the return statement.
+    /// </param>
+    /// <returns>
+    /// The source position at the start of the line before which the blank-line
+    /// separator should be inserted.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// The method examines the return statement's leading Roslyn trivia in reverse
+    /// order so that comments immediately associated with the return can be
+    /// treated as part of the same logical documentation block.
+    /// </para>
+    /// <para>
+    /// Whitespace and end-of-line trivia are ignored while walking backwards.
+    /// Consecutive single-line and multiline comments are recorded as documenting
+    /// comments. The earliest comment in that contiguous sequence becomes the
+    /// insertion target.
+    /// </para>
+    /// <para>
+    /// If no documenting comment is found, the return statement itself is used as
+    /// the insertion target. This causes the blank line to be inserted immediately
+    /// before the return statement.
+    /// </para>
+    /// <para>
+    /// Returning the start of the containing source line ensures that the inserted
+    /// separator appears before the existing indentation rather than splitting
+    /// indentation or comment text.
+    /// </para>
+    /// </remarks>
+    private static int GetInsertionPosition(
+        ReturnStatementSyntax returnStatement,
+        SourceText sourceText)
+    {
+        var leadingTrivia = returnStatement.GetLeadingTrivia();
+
+        if (leadingTrivia.Count == 0)
+        {
+            return returnStatement.SpanStart;
+        }
+
+        SyntaxTrivia? firstDocumentingComment = null;
+
+        for (var index = leadingTrivia.Count - 1;
+            index >= 0;
+            index--)
+        {
+            var trivia = leadingTrivia[index];
+
+            if (trivia.IsKind(SyntaxKind.WhitespaceTrivia) ||
+                trivia.IsKind(SyntaxKind.EndOfLineTrivia))
+            {
+                continue;
+            }
+
+            if (trivia.IsKind(SyntaxKind.SingleLineCommentTrivia) ||
+                trivia.IsKind(SyntaxKind.MultiLineCommentTrivia))
+            {
+                firstDocumentingComment = trivia;
+
+                continue;
+            }
+
+            break;
+        }
+
+        if (firstDocumentingComment is null)
+        {
+            return returnStatement.SpanStart;
+        }
+
+        var commentLine = sourceText.Lines.GetLineFromPosition(
+            firstDocumentingComment.Value.SpanStart);
+
+        return commentLine.Start;
     }
 
     /// <summary>

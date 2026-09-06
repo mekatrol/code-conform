@@ -1,0 +1,24 @@
+internal static class TestClass
+{
+    public static int GetValue()
+    {
+        try
+        {
+            DoSomething();
+        }
+        catch
+        {
+            HandleError();
+        }
+
+        return 42;
+    }
+
+    private static void DoSomething()
+    {
+    }
+
+    private static void HandleError()
+    {
+    }
+}

@@ -1,0 +1,14 @@
+internal static class TestClass
+{
+    public static void Execute()
+    {
+        DoSomething();
+        // comment 1
+        // comment 2
+        return;
+    }
+
+    private static void DoSomething()
+    {
+    }
+}

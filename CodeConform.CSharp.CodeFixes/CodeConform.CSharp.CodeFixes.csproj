@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\CodeConform.CSharp\CodeConform.CSharp.csproj" />
+		<ProjectReference Include="..\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj" />
 
 		<!-- Roslyn workspace and code-fix APIs used by CodeFixProvider implementations. -->
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" PrivateAssets="all" />

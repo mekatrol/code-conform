@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -10,6 +10,7 @@
 	<ItemGroup>
 		<PackageReference Include="MSTest" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Analyzer.Testing" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.CodeFix.Testing" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" />
 	</ItemGroup>
 
@@ -18,7 +19,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\CodeConform.CSharp\CodeConform.CSharp.csproj" />
+		<ProjectReference Include="..\CodeConform.CSharp.Analyzers\CodeConform.CSharp.Analyzers.csproj" />
+		<ProjectReference Include="..\CodeConform.CSharp.CodeFixes\CodeConform.CSharp.CodeFixes.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -30,7 +32,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Analyzer Include="..\CodeConform.CSharp\bin\$(Configuration)\netstandard2.0\CodeConform.CSharp.dll" />
+		<Analyzer Include="..\CodeConform.CSharp.Analyzers\bin\$(Configuration)\netstandard2.0\CodeConform.CSharp.Analyzers.dll" />
 	</ItemGroup>
 
 </Project>
+
+

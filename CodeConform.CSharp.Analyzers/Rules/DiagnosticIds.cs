@@ -1,4 +1,4 @@
-﻿namespace CodeConform.CSharp.Rules;
+﻿namespace CodeConform.CSharp.Analyzers.Rules;
 
 /// <summary>
 /// Defines the diagnostic identifiers exposed by CodeConform C# rules.
