@@ -470,19 +470,29 @@ D:\NuGetLocal\
 
 ### 3. Reference the Package from Another Repository
 
-Change to the other repository and add the package to each C# project that
-should run the analyzer. Supplying the project path is clearer when the
-solution contains multiple projects:
+Copy `Scripts\Add-CodeConformToSolution.ps1` into the consuming repository's
+`Scripts` directory. Change to the directory that contains the consuming
+solution, then run the copied script:
 
 ```powershell
-dotnet add .\src\MyProject\MyProject.csproj package CodeConform.CSharp `
-    --version 0.1.0-local.1 `
-    --source D:\NuGetLocal
+& .\Scripts\Add-CodeConformToSolution.ps1
 ```
 
-Replace the example project path with the actual consuming project. The command
-adds a `PackageReference`; for an analyzer-only dependency, the recommended
-project entry is:
+The script discovers the single `.sln` or `.slnx` in the current directory and
+uses the projects registered in that solution rather than every project found
+below the directory. It selects the newest compatible CodeConform package,
+including local prerelease versions, from `D:\NuGetLocal`. Existing references
+are updated when necessary, and running the script again when every project is
+current leaves the requested package versions unchanged. To use another local
+feed, pass `-PackageSource` followed by its path.
+
+The script identifies the CodeConform source solution by its registered
+analyzer project, rather than by the location of the script. It therefore still
+refuses to install CodeConform into CodeConform itself, while a copy under a
+different solution works normally. The script also stops without making changes
+if the current directory contains zero or multiple solution files.
+
+For an analyzer-only dependency, the recommended project entry is:
 
 ```xml
 <ItemGroup>
@@ -517,11 +527,11 @@ Then omit `Version` from the project reference:
 </ItemGroup>
 ```
 
-Restore and build the consuming solution:
+Restore and build the consuming solution from its directory:
 
 ```powershell
-dotnet restore .\MyOtherSolution.slnx
-dotnet build .\MyOtherSolution.slnx
+dotnet restore
+dotnet build
 ```
 
 ### 4. Verify the Analyzer
